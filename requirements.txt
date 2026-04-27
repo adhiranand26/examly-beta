@@ -1,0 +1,10 @@
+PySide6
+qasync
+pynput
+pytesseract
+Pillow
+httpx
+pydantic
+keyring
+pyperclip
+pywin32; sys_platform == 'win32'

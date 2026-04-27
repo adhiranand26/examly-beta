@@ -1,0 +1,14 @@
+{
+  "hotkey": {
+    "region_capture": "cmd+shift+d",
+    "full_capture": "cmd+shift+a",
+    "show_last": "cmd+shift+e"
+  },
+  "ai": {
+    "provider": "ollama",
+    "model": "mercury-2",
+    "max_tokens": 4096
+  },
+  "overlay_opacity": 0.86,
+  "theme": "dark"
+}
