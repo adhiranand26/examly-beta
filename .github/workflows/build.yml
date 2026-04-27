@@ -18,18 +18,35 @@ jobs:
       with:
         python-version: '3.12'
 
+    - name: Install Tesseract OCR
+      run: |
+        choco install tesseract -y --no-progress
+        echo "Tesseract installed at:"
+        where tesseract
+        tesseract --version
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pyinstaller
+        pip install pyinstaller pyarmor
 
-    - name: Build with PyInstaller
+    - name: Obfuscate source code
       run: |
-        pyinstaller Examly.spec --clean
+        # Obfuscate all Python source files (strips docstrings, renames internals)
+        pyarmor gen --output obfuscated main.py
+        pyarmor gen --output obfuscated/src src/config_manager.py src/ai_service.py src/ocr_service.py src/capture_service.py src/hotkey_service.py src/overlay_ui.py src/settings_ui.py src/protection.py src/__init__.py
+
+    - name: Build with PyInstaller (obfuscated)
+      run: |
+        # Copy non-Python assets to obfuscated dir
+        copy config.json obfuscated\config.json
+        # Build from obfuscated source
+        cd obfuscated
+        pyinstaller ..\Examly.spec --clean
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Examly-Windows
-        path: dist/Examly
+        name: WindowsHelper
+        path: obfuscated/dist/WindowsHelper

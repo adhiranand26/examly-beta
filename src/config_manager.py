@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 import os
 from pydantic import BaseModel, Field
+from typing import List
 
 def get_resource_path(filename):
     """Get absolute path to resource, works for dev and for PyInstaller"""
@@ -23,15 +24,28 @@ class HotkeyConfig(BaseModel):
     full_capture: str = "cmd+shift+a"
     show_last: str = "cmd+shift+e"
 
+class AIProviderConfig(BaseModel):
+    name: str = "inceptionlabs"
+    model: str = "mercury-2"
+    url: str = "https://api.inceptionlabs.ai/v1/chat/completions"
+
 class AIConfig(BaseModel):
-    provider: str = "openai"
-    model: str = "gpt-4o-mini"
-    max_tokens: int = 512
+    provider: str = "inceptionlabs"
+    model: str = "mercury-2"
+    max_tokens: int = 4096
+    fallback_chain: List[AIProviderConfig] = Field(default_factory=lambda: [
+        AIProviderConfig(name="inceptionlabs", model="mercury-2", url="https://api.inceptionlabs.ai/v1/chat/completions"),
+        AIProviderConfig(name="openai", model="gpt-4o-mini", url="https://api.openai.com/v1/chat/completions"),
+        AIProviderConfig(name="ollama", model="llava", url="http://localhost:11434/v1/chat/completions"),
+    ])
 
 class ConfigModel(BaseModel):
     hotkey: HotkeyConfig = Field(default_factory=HotkeyConfig)
     ai: AIConfig = Field(default_factory=AIConfig)
     overlay_opacity: float = 0.85
+    auto_hide_seconds: int = 5
+    tooltip_mode: bool = False
+    auto_copy: bool = True
     theme: str = "dark"
 
 class ConfigManager:

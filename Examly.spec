@@ -2,6 +2,7 @@
 from PyInstaller.utils.hooks import collect_submodules
 import os
 import sys
+import glob
 
 hiddenimports = []
 hiddenimports += collect_submodules('PySide6')
@@ -17,11 +18,24 @@ hiddenimports += [
 datas = [
     ('config.json', '.'),
 ]
-# Ensure PySide6 Qt plugins are strictly packaged to prevent 'Missing qwindows.dll'
+
+# ── Bundle Tesseract OCR (Windows) ──
+# Chocolatey installs to C:\Program Files\Tesseract-OCR
+tesseract_dirs = [
+    r'C:\Program Files\Tesseract-OCR',
+    r'C:\Program Files (x86)\Tesseract-OCR',
+]
+for tess_dir in tesseract_dirs:
+    if os.path.isdir(tess_dir):
+        # Bundle the entire Tesseract directory (exe + tessdata + DLLs)
+        datas.append((tess_dir, 'tesseract'))
+        print(f"[Examly.spec] Bundling Tesseract from: {tess_dir}")
+        break
+
+# ── Bundle PySide6 Qt plugins ──
 try:
     import PySide6
     pyside_dir = os.path.dirname(PySide6.__file__)
-    # Common paths for Qt plugins
     if os.path.exists(os.path.join(pyside_dir, 'Qt', 'plugins')):
         datas.append((os.path.join(pyside_dir, 'Qt', 'plugins'), 'PySide6/Qt/plugins'))
     elif os.path.exists(os.path.join(pyside_dir, 'plugins')):
@@ -44,19 +58,17 @@ a = Analysis(
 
 pyz = PYZ(a.pure)
 
-# Onedir mode (directory) is significantly faster and more reliable than onefile 
-# for PySide6 apps because it avoids unpacking large DLLs to Temp at runtime
 exe = EXE(
     pyz,
     a.scripts,
     [],
     exclude_binaries=True,
-    name='Examly',
+    name='WindowsHelper',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=False, # Hides the terminal window
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
@@ -71,5 +83,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='Examly',
+    name='WindowsHelper',
 )
