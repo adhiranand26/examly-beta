@@ -10,7 +10,7 @@ class AIService:
         """
         Structured JSON response using advanced prompting and strictly validated output.
         """
-        api_key = self.config_manager.get_api_key()
+        api_key = str(self.config_manager.get_api_key()).strip()
         if not api_key:
             return {"answer": "No API key configured.", "confidence": 0.0, "type": "error"}
 
