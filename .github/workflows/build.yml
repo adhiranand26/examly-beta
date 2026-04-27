@@ -21,9 +21,17 @@ jobs:
     - name: Install Tesseract OCR
       run: |
         choco install tesseract -y --no-progress
-        echo "Tesseract installed at:"
-        where tesseract
-        tesseract --version
+        echo "C:\Program Files\Tesseract-OCR" >> $GITHUB_PATH
+
+    - name: Verify Tesseract
+      run: |
+        if (Test-Path "C:\Program Files\Tesseract-OCR\tesseract.exe") {
+            echo "Tesseract found at C:\Program Files\Tesseract-OCR"
+            & "C:\Program Files\Tesseract-OCR\tesseract.exe" --version
+        } else {
+            echo "Tesseract NOT found in default path"
+            exit 1
+        }
 
     - name: Install dependencies
       run: |
