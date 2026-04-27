@@ -76,7 +76,60 @@ STYLESHEET = """
         background: #cba6f7;
         border: 2px solid #cba6f7;
     }
+    QLineEdit#HotkeyRecorder {
+        background-color: #1e1e2e;
+        border: 2px dashed #45475a;
+        color: #fab387;
+        font-weight: bold;
+        text-align: center;
+    }
+    QLineEdit#HotkeyRecorder:focus {
+        border: 2px solid #fab387;
+        background-color: #313244;
+    }
 """
+
+class HotkeyLineEdit(QLineEdit):
+    """Custom QLineEdit that records physical key presses for hotkey remapping."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setObjectName("HotkeyRecorder")
+        self.setReadOnly(True)
+        self.setPlaceholderText("Click to record...")
+        self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.modifiers = []
+        self.key = None
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        
+        # Ignore individual modifier presses as the final key
+        if key in (Qt.Key.Key_Control, Qt.Key.Key_Shift, Qt.Key.Key_Alt, Qt.Key.Key_Meta):
+            return
+
+        mods = []
+        qt_mods = event.modifiers()
+        if qt_mods & Qt.KeyboardModifier.ControlModifier: mods.append("ctrl")
+        if qt_mods & Qt.KeyboardModifier.ShiftModifier: mods.append("shift")
+        if qt_mods & Qt.KeyboardModifier.AltModifier: mods.append("alt")
+        if qt_mods & Qt.KeyboardModifier.MetaModifier: mods.append("cmd")
+
+        key_text = event.text().lower()
+        if not key_text or key_text.isspace():
+            # Handle special keys (F1, Esc, etc)
+            key_text = event.keyCombination().key().name.lower().replace("key_", "")
+        
+        if mods:
+            self.setText("+".join(mods) + "+" + key_text)
+        else:
+            self.setText(key_text)
+            
+        self.clearFocus()
+
+    def mousePressEvent(self, event):
+        self.setText("")
+        self.setPlaceholderText("Press your key combo...")
+        super().mousePressEvent(event)
 
 class SettingsUI(QWidget):
     def __init__(self, config_manager, hotkey_service, overlay):
@@ -188,13 +241,13 @@ class SettingsUI(QWidget):
         hk_form = QFormLayout()
         hk_form.setSpacing(6)
         
-        self.region_key = QLineEdit(self.config_manager.config.hotkey.region_capture)
+        self.region_key = HotkeyLineEdit(self.config_manager.config.hotkey.region_capture)
         hk_form.addRow("Region Snip", self.region_key)
         
-        self.full_key = QLineEdit(self.config_manager.config.hotkey.full_capture)
+        self.full_key = HotkeyLineEdit(self.config_manager.config.hotkey.full_capture)
         hk_form.addRow("Full Screen", self.full_key)
         
-        self.show_key = QLineEdit(self.config_manager.config.hotkey.show_last)
+        self.show_key = HotkeyLineEdit(self.config_manager.config.hotkey.show_last)
         hk_form.addRow("Show Last", self.show_key)
         
         card_layout.addLayout(hk_form)
