@@ -199,6 +199,11 @@ class SettingsUI(QWidget):
         
         card_layout.addLayout(hk_form)
         
+        self.status_msg = QLabel("")
+        self.status_msg.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.status_msg.setStyleSheet("color: #a6e3a1; font-size: 11px; margin-top: 5px;")
+        card_layout.addWidget(self.status_msg)
+        
         root_layout.addWidget(card)
         
         # ── Buttons ──
@@ -253,8 +258,14 @@ class SettingsUI(QWidget):
             QTimer.singleShot(1500, self.overlay.hide)
 
     def apply_settings(self):
+        # 1. Update Config Object
         self.config_manager.config.ai.provider = self.provider.currentText()
-        self.config_manager.set_api_key(self.api_key.text())
+        
+        # 2. Save API Key (Strip spaces!)
+        key = self.api_key.text().strip()
+        self.config_manager.set_api_key(key)
+        
+        # 3. Update Other Configs
         self.config_manager.config.overlay_opacity = self.opacity.value() / 100.0
         self.config_manager.config.auto_hide_seconds = self.auto_hide.value()
         self.config_manager.config.tooltip_mode = self.tooltip_mode.isChecked()
@@ -263,9 +274,26 @@ class SettingsUI(QWidget):
         self.config_manager.config.hotkey.full_capture = self.full_key.text()
         self.config_manager.config.hotkey.show_last = self.show_key.text()
         
+        # 4. Save to disk
         self.config_manager.save()
+        
+        # 5. Restart services live
         self.hotkey_service.start()
         self.overlay.setWindowOpacity(self.config_manager.config.overlay_opacity)
+        
+        # 6. Visual Feedback
+        self.status_msg.setText("✅ Settings saved and services restarted!")
+        sender = self.sender()
+        if sender:
+            original_text = sender.text()
+            sender.setText("✨ Saved!")
+            sender.setStyleSheet(sender.styleSheet().replace("#a6e3a1", "#94e2d5"))
+            QTimer.singleShot(2000, lambda: self.reset_apply_btn(sender, original_text))
+
+    def reset_apply_btn(self, btn, original_text):
+        btn.setText(original_text)
+        btn.setStyleSheet(btn.styleSheet().replace("#94e2d5", "#a6e3a1"))
+        self.status_msg.setText("")
 
     def add_to_history(self, data: dict):
         self.answer_history.insert(0, data)

@@ -138,8 +138,14 @@ class OverlayUI(QWidget):
         self.answer_label.setText(answer)
         
         explanation = data.get("explanation", "")
+        is_error = data.get("type") == "error"
         self.explain_label.setText(explanation if explanation else "")
-        self.explain_label.setVisible(bool(explanation))
+        self.explain_label.setVisible(bool(explanation) or is_error)
+        
+        if is_error:
+            self.explain_label.setStyleSheet("color: #f38ba8; border: none; background: transparent;")
+        else:
+            self.explain_label.setStyleSheet("color: #9399b2; border: none; background: transparent;")
         
         q_type = data.get("type", "")
         if q_type:

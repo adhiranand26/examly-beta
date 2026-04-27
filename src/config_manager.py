@@ -36,6 +36,8 @@ class AIConfig(BaseModel):
     fallback_chain: List[AIProviderConfig] = Field(default_factory=lambda: [
         AIProviderConfig(name="inceptionlabs", model="mercury-2", url="https://api.inceptionlabs.ai/v1/chat/completions"),
         AIProviderConfig(name="openai", model="gpt-4o-mini", url="https://api.openai.com/v1/chat/completions"),
+        AIProviderConfig(name="gemini", model="gemini-1.5-flash", url="https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"),
+        AIProviderConfig(name="mistral", model="mistral-tiny", url="https://api.mistral.ai/v1/chat/completions"),
         AIProviderConfig(name="ollama", model="llava", url="http://localhost:11434/v1/chat/completions"),
     ])
 
